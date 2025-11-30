@@ -859,75 +859,215 @@ def estimate_position(analysis: dict) -> LocationEstimate:
 
 
 # =============================================================================
-# DRAWING FUNCTIONS
+# DRAWING FUNCTIONS - MODERN VISUAL DESIGN
 # =============================================================================
 
+# Color Palette
+COLORS = {
+    # Background & floor
+    "bg_dark": "#1a1d29",
+    "bg_medium": "#252836",
+    "floor_base": "#2d3142",
+    "floor_accent": "#3d4157",
+    
+    # Accent colors
+    "primary": "#6c5ce7",       # Purple
+    "secondary": "#00cec9",     # Teal
+    "accent": "#fd79a8",        # Pink
+    "warning": "#fdcb6e",       # Yellow
+    "success": "#00b894",       # Green
+    "danger": "#ff7675",        # Red-coral
+    
+    # Navigation
+    "path_main": "#00cec9",
+    "path_glow": "#81ecec",
+    "marker": "#ff7675",
+    "marker_glow": "#fab1a0",
+    
+    # Shops
+    "shop_default": "#4a4e69",
+    "shop_highlight": "#6c5ce7",
+    "shop_text": "#ffeaa7",
+    
+    # Facilities
+    "elevator": "#fd79a8",
+    "escalator": "#74b9ff",
+    "toilet": "#55efc4",
+    "toilet_target": "#fdcb6e",
+    
+    # UI
+    "card_bg": "rgba(45, 49, 66, 0.95)",
+    "card_border": "#6c5ce7",
+    "text_primary": "#dfe6e9",
+    "text_secondary": "#b2bec3",
+}
+
+def hex_to_rgb(hex_color):
+    """Convert hex color to RGB tuple."""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def blend_colors(color1, color2, factor=0.5):
+    """Blend two colors together."""
+    r1, g1, b1 = hex_to_rgb(color1)
+    r2, g2, b2 = hex_to_rgb(color2)
+    r = int(r1 + (r2 - r1) * factor)
+    g = int(g1 + (g2 - g1) * factor)
+    b = int(b1 + (b2 - b1) * factor)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+def draw_rounded_rect(draw, box, radius, fill, outline=None, outline_width=1):
+    """Draw a rounded rectangle."""
+    x1, y1, x2, y2 = box
+    # Draw filled rectangle with rounded corners using ellipses
+    draw.rectangle([x1 + radius, y1, x2 - radius, y2], fill=fill)
+    draw.rectangle([x1, y1 + radius, x2, y2 - radius], fill=fill)
+    draw.ellipse([x1, y1, x1 + radius * 2, y1 + radius * 2], fill=fill)
+    draw.ellipse([x2 - radius * 2, y1, x2, y1 + radius * 2], fill=fill)
+    draw.ellipse([x1, y2 - radius * 2, x1 + radius * 2, y2], fill=fill)
+    draw.ellipse([x2 - radius * 2, y2 - radius * 2, x2, y2], fill=fill)
+    
+    if outline:
+        # Draw outline arcs and lines
+        draw.arc([x1, y1, x1 + radius * 2, y1 + radius * 2], 180, 270, fill=outline, width=outline_width)
+        draw.arc([x2 - radius * 2, y1, x2, y1 + radius * 2], 270, 360, fill=outline, width=outline_width)
+        draw.arc([x1, y2 - radius * 2, x1 + radius * 2, y2], 90, 180, fill=outline, width=outline_width)
+        draw.arc([x2 - radius * 2, y2 - radius * 2, x2, y2], 0, 90, fill=outline, width=outline_width)
+        draw.line([(x1 + radius, y1), (x2 - radius, y1)], fill=outline, width=outline_width)
+        draw.line([(x1 + radius, y2), (x2 - radius, y2)], fill=outline, width=outline_width)
+        draw.line([(x1, y1 + radius), (x1, y2 - radius)], fill=outline, width=outline_width)
+        draw.line([(x2, y1 + radius), (x2, y2 - radius)], fill=outline, width=outline_width)
+
+def draw_gradient_background(img, width, height):
+    """Draw a subtle gradient background."""
+    draw = ImageDraw.Draw(img)
+    for y in range(height):
+        # Gradient from dark blue to slightly lighter
+        factor = y / height
+        color = blend_colors(COLORS["bg_dark"], COLORS["bg_medium"], factor * 0.6)
+        draw.line([(0, y), (width, y)], fill=color)
+    
+    # Add subtle grid pattern
+    grid_color = "#2a2f42"
+    for x in range(0, width, 30):
+        draw.line([(x, 0), (x, height)], fill=grid_color, width=1)
+    for y in range(0, height, 30):
+        draw.line([(0, y), (width, y)], fill=grid_color, width=1)
+
 def draw_floor_shape(draw, width, height, margin, color):
-    """Draw the angular Times Square floor shape."""
+    """Draw the angular Times Square floor shape with modern styling."""
     points = [
         (margin, margin + 50),
-        (width - margin - 100, margin),
+        (width - margin - 100, margin + 10),
         (width - margin, margin + 60),
         (width - margin, height - margin - 50),
-        (width - margin - 100, height - margin),
-        (margin + 60, height - margin),
+        (width - margin - 100, height - margin - 10),
+        (margin + 60, height - margin - 10),
         (margin, height - margin - 60)
     ]
-    draw.polygon(points, fill=color, outline="#8a8a8a", width=2)
+    
+    # Shadow
+    shadow_offset = 8
+    shadow_points = [(p[0] + shadow_offset, p[1] + shadow_offset) for p in points]
+    draw.polygon(shadow_points, fill="#0a0c14")
+    
+    # Main floor
+    draw.polygon(points, fill=COLORS["floor_base"], outline=COLORS["primary"], width=3)
+    
+    # Inner accent border
+    inner_points = [
+        (margin + 15, margin + 55),
+        (width - margin - 105, margin + 22),
+        (width - margin - 12, margin + 68),
+        (width - margin - 12, height - margin - 55),
+        (width - margin - 105, height - margin - 22),
+        (margin + 68, height - margin - 22),
+        (margin + 12, height - margin - 65)
+    ]
+    draw.polygon(inner_points, outline="#3d4157", width=1)
 
-def draw_escalator_icon(draw, x, y, size=16, is_spiral=False):
-    """Draw escalator - light blue rectangle or spiral."""
+def draw_escalator_icon(draw, x, y, size=18, is_spiral=False):
+    """Draw modern escalator icon."""
     if is_spiral:
-        # Central spiral escalator
-        draw.ellipse([x-size, y-size, x+size, y+size], fill="#e0f7fa", outline="#00acc1", width=2)
-        # Spiral lines
-        for angle in range(0, 360, 45):
+        # Central spiral escalator - glowing effect
+        for i in range(3, 0, -1):
+            alpha_size = size + i * 3
+            draw.ellipse([x-alpha_size, y-alpha_size, x+alpha_size, y+alpha_size], 
+                        fill=blend_colors(COLORS["escalator"], COLORS["bg_dark"], 0.7))
+        
+        draw.ellipse([x-size, y-size, x+size, y+size], fill=COLORS["escalator"], outline="#fff", width=2)
+        
+        # Spiral pattern
+        for angle in range(0, 360, 30):
             rad = math.radians(angle)
             draw.line([
-                (x + size*0.3*math.cos(rad), y + size*0.3*math.sin(rad)),
-                (x + size*0.8*math.cos(rad), y + size*0.8*math.sin(rad))
-            ], fill="#00838f", width=2)
+                (x + size*0.25*math.cos(rad), y + size*0.25*math.sin(rad)),
+                (x + size*0.7*math.cos(rad), y + size*0.7*math.sin(rad))
+            ], fill="#fff", width=2)
     else:
-        # Regular escalator - light blue rectangle with steps
-        draw.rectangle([x-size, y-size*0.6, x+size, y+size*0.6], 
-                      fill="#b2ebf2", outline="#00acc1", width=2)
-        # Step lines
+        # Modern escalator icon
+        draw.rounded_rectangle([x-size, y-size*0.5, x+size, y+size*0.5], 
+                               radius=4, fill=COLORS["escalator"], outline="#fff", width=2)
+        # Steps
         for i in range(-2, 3):
-            lx = x + i * size * 0.4
-            draw.line([(lx, y-size*0.5), (lx+4, y+size*0.5)], fill="#00838f", width=1)
+            lx = x + i * size * 0.35
+            draw.line([(lx, y-size*0.35), (lx+3, y+size*0.35)], fill="#fff", width=2)
 
-def draw_elevator_icon(draw, x, y, size=14):
-    """Draw elevator - pink/purple 3D cube style."""
-    # 3D cube effect
-    draw.polygon([
-        (x, y-size),  # top
-        (x+size, y-size*0.3),  # right
-        (x, y+size*0.4),  # bottom
-        (x-size, y-size*0.3)  # left
-    ], fill="#f8bbd9", outline="#c2185b", width=2)
+def draw_elevator_icon(draw, x, y, size=16):
+    """Draw modern elevator icon with glow effect."""
+    # Glow
+    for i in range(3, 0, -1):
+        glow_size = size + i * 2
+        draw.ellipse([x-glow_size, y-glow_size, x+glow_size, y+glow_size], 
+                    fill=blend_colors(COLORS["elevator"], COLORS["bg_dark"], 0.7))
+    
+    # Main icon - rounded square
+    draw.rounded_rectangle([x-size, y-size, x+size, y+size], 
+                          radius=4, fill=COLORS["elevator"], outline="#fff", width=2)
+    
     # Up/down arrows
-    draw.polygon([(x, y-size*0.6), (x-4, y-size*0.3), (x+4, y-size*0.3)], fill="#880e4f")
-    draw.polygon([(x, y+size*0.2), (x-4, y-size*0.1), (x+4, y-size*0.1)], fill="#880e4f")
+    arrow_color = "#fff"
+    # Up arrow
+    draw.polygon([(x, y-size*0.55), (x-5, y-size*0.15), (x+5, y-size*0.15)], fill=arrow_color)
+    # Down arrow
+    draw.polygon([(x, y+size*0.55), (x-5, y+size*0.15), (x+5, y+size*0.15)], fill=arrow_color)
 
-def draw_toilet_icon(draw, x, y, size=12, highlight=False):
-    """Draw toilet icon with male/female figures."""
-    outline = "#ff6b00" if highlight else "#388e3c"
-    fill = "#fff3e0" if highlight else "#c8e6c9"
-    draw.ellipse([x-size-4, y-size-4, x+size+4, y+size+4], 
-                fill=fill, outline=outline, width=3 if highlight else 2)
-    # Simplified figures
-    draw.ellipse([x-5, y-6, x-2, y-3], fill="#333")  # head
-    draw.line([(x-3.5, y-2), (x-3.5, y+4)], fill="#333", width=2)  # body
-    draw.ellipse([x+2, y-6, x+5, y-3], fill="#333")  # head
-    draw.polygon([(x+3.5, y-2), (x, y+6), (x+7, y+6)], fill="#333")  # dress
+def draw_toilet_icon(draw, x, y, size=14, highlight=False):
+    """Draw modern toilet icon."""
+    main_color = COLORS["toilet_target"] if highlight else COLORS["toilet"]
+    
+    # Glow effect for highlighted
+    if highlight:
+        for i in range(4, 0, -1):
+            glow_size = size + i * 4
+            draw.ellipse([x-glow_size, y-glow_size, x+glow_size, y+glow_size], 
+                        fill=blend_colors(COLORS["toilet_target"], COLORS["bg_dark"], 0.6 + i*0.1))
+    
+    # Main circle
+    draw.ellipse([x-size-2, y-size-2, x+size+2, y+size+2], 
+                fill=main_color, outline="#fff", width=2 if not highlight else 3)
+    
+    # WC text
+    try:
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", int(size * 0.9))
+    except:
+        font = ImageFont.load_default()
+    draw.text((x, y), "WC", fill="#1a1d29", font=font, anchor="mm")
 
 def draw_navigation_path(draw, path, width, height, margin):
-    """Draw navigation path as dashed orange line."""
+    """Draw modern animated-style navigation path."""
     if len(path) < 2:
         return
     pixels = [(margin + (width-2*margin)*x, margin + (height-2*margin)*y) for x, y in path]
     
-    # Draw dashed line
+    # Draw glow effect (wider, transparent path underneath)
+    for glow_pass in range(3, 0, -1):
+        glow_width = 8 + glow_pass * 3
+        glow_color = blend_colors(COLORS["path_main"], COLORS["bg_dark"], 0.5 + glow_pass * 0.15)
+        for i in range(len(pixels)-1):
+            draw.line([pixels[i], pixels[i+1]], fill=glow_color, width=glow_width)
+    
+    # Draw main path with dots
     for i in range(len(pixels)-1):
         p1, p2 = pixels[i], pixels[i+1]
         dx, dy = p2[0]-p1[0], p2[1]-p1[1]
@@ -935,70 +1075,103 @@ def draw_navigation_path(draw, path, width, height, margin):
         if length < 1:
             continue
         
-        # Dashed segments
-        dash_len = 12
-        gap_len = 6
-        for j in range(int(length / (dash_len + gap_len)) + 1):
-            t1 = j * (dash_len + gap_len) / length
-            t2 = min((j * (dash_len + gap_len) + dash_len) / length, 1.0)
-            if t1 >= 1.0:
-                break
-            draw.line([
-                (p1[0] + dx*t1, p1[1] + dy*t1),
-                (p1[0] + dx*t2, p1[1] + dy*t2)
-            ], fill="#ff6b00", width=4)
-        
-        # Waypoint dots
-        if i > 0:
-            draw.ellipse([p1[0]-5, p1[1]-5, p1[0]+5, p1[1]+5], fill="#ff6b00")
+        # Dotted line effect
+        dot_spacing = 15
+        num_dots = int(length / dot_spacing)
+        for j in range(num_dots + 1):
+            t = j / max(num_dots, 1)
+            dot_x = p1[0] + dx * t
+            dot_y = p1[1] + dy * t
+            dot_size = 4
+            draw.ellipse([dot_x-dot_size, dot_y-dot_size, dot_x+dot_size, dot_y+dot_size], 
+                        fill=COLORS["path_main"])
     
-    # Destination marker
+    # Waypoint markers (small circles at turns)
+    for i in range(1, len(pixels)-1):
+        p = pixels[i]
+        draw.ellipse([p[0]-6, p[1]-6, p[0]+6, p[1]+6], 
+                    fill=COLORS["path_main"], outline="#fff", width=2)
+    
+    # Destination marker - pulsing target
     end = pixels[-1]
-    draw.ellipse([end[0]-12, end[1]-12, end[0]+12, end[1]+12], outline="#ff6b00", width=3)
+    for ring in range(3, 0, -1):
+        ring_size = 10 + ring * 6
+        ring_color = blend_colors(COLORS["toilet_target"], COLORS["bg_dark"], 0.4 + ring * 0.15)
+        draw.ellipse([end[0]-ring_size, end[1]-ring_size, end[0]+ring_size, end[1]+ring_size], 
+                    outline=ring_color, width=2)
 
 def create_floor_plan_image(floor, width=800, height=600, location=None, toilet_nav=None):
-    """Create floor plan visualization."""
-    img = Image.new("RGB", (width, height), "#d0d0d0")
+    """Create modern floor plan visualization."""
+    img = Image.new("RGB", (width, height), COLORS["bg_dark"])
     draw = ImageDraw.Draw(img)
-    margin = 50
+    margin = 60
+    
+    # Draw gradient background
+    draw_gradient_background(img, width, height)
+    draw = ImageDraw.Draw(img)  # Refresh draw object after background
     
     floor_info = FLOOR_DATA.get(floor, FLOOR_DATA["GF"])
     draw_floor_shape(draw, width, height, margin, floor_info["color"])
     
     try:
-        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 11)
-        title_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 20)
-        small_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 9)
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 12)
+        title_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 24)
+        small_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 10)
+        bold_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 14)
     except:
-        font = title_font = small_font = ImageFont.load_default()
+        font = title_font = small_font = bold_font = ImageFont.load_default()
     
-    # Title
-    draw.text((width//2, 22), f"Times Square Hong Kong - {floor_info['name']}", 
-             fill="#333", font=title_font, anchor="mm")
+    # Title with shadow
+    title_text = f"TIMES SQUARE · {floor_info['name'].upper()}"
+    draw.text((width//2 + 2, 28), title_text, fill="#0a0c14", font=title_font, anchor="mm")
+    draw.text((width//2, 26), title_text, fill=COLORS["text_primary"], font=title_font, anchor="mm")
     
-    # Draw stores
+    # Subtitle
+    draw.text((width//2, 48), "Hong Kong · Floor Plan", fill=COLORS["text_secondary"], font=small_font, anchor="mm")
+    
+    # Draw stores with modern styling
     stores = floor_info.get("stores", {})
     for code, info in stores.items():
         sx = margin + (width - 2*margin) * info["x"]
         sy = margin + (height - 2*margin) * info["y"]
         
-        # Determine size and color
         name = info.get("name", code)
-        color = info.get("color", floor_info["shop_color"])
         
+        # Determine size based on store importance
         if name in ["Lane Crawford", "Fortress", "The Body Shop", "Shake Shack", "city'super"]:
-            sw, sh = 85, 40
+            sw, sh = 90, 44
+            is_major = True
         elif "G124" in code or "b1(a)" in code:
-            sw, sh = 80, 45
+            sw, sh = 85, 48
+            is_major = True
         else:
-            sw, sh = 55, 28
+            sw, sh = 60, 32
+            is_major = False
         
-        draw.rectangle([sx-sw//2, sy-sh//2, sx+sw//2, sy+sh//2], 
-                      fill=color, outline="#666", width=1)
+        # Shop color
+        base_color = info.get("color", COLORS["shop_default"])
+        if base_color.startswith("#") and len(base_color) == 7:
+            shop_color = base_color
+        else:
+            shop_color = COLORS["shop_default"]
         
-        # Label
-        label = name[:12] if len(name) > 12 else name
-        draw.text((sx, sy), label, fill="#000", font=small_font, anchor="mm")
+        # Shadow
+        draw.rounded_rectangle([sx-sw//2+3, sy-sh//2+3, sx+sw//2+3, sy+sh//2+3], 
+                               radius=6, fill="#0a0c14")
+        
+        # Main shop box
+        outline_color = COLORS["primary"] if is_major else "#555"
+        draw.rounded_rectangle([sx-sw//2, sy-sh//2, sx+sw//2, sy+sh//2], 
+                               radius=6, fill=shop_color, outline=outline_color, width=2 if is_major else 1)
+        
+        # Label with better contrast
+        label = name[:14] if len(name) > 14 else name
+        text_color = "#fff" if is_major else COLORS["shop_text"]
+        draw.text((sx, sy), label, fill=text_color, font=small_font if not is_major else font, anchor="mm")
+    
+    # Draw navigation path BEFORE facilities (so path goes under icons)
+    if toilet_nav and location:
+        draw_navigation_path(draw, toilet_nav["path"], width, height, margin)
     
     # Draw facilities
     floor_fac = FLOOR_FACILITIES.get(floor, {})
@@ -1019,10 +1192,6 @@ def create_floor_plan_image(floor, width=800, height=600, location=None, toilet_
             ly = margin + (height - 2*margin) * l["y"]
             draw_elevator_icon(draw, lx, ly)
     
-    # Draw navigation path first (so it's under icons)
-    if toilet_nav and location:
-        draw_navigation_path(draw, toilet_nav["path"], width, height, margin)
-    
     # Toilets
     for wc_id in floor_fac.get("toilets", []):
         if wc_id in TOILET_POSITIONS:
@@ -1032,104 +1201,187 @@ def create_floor_plan_image(floor, width=800, height=600, location=None, toilet_
             is_target = toilet_nav and wc.get("name") == toilet_nav.get("toilet", {}).get("name")
             draw_toilet_icon(draw, wx, wy, highlight=is_target)
     
-    # Legend
-    ly = height - 32
-    draw.rectangle([margin-5, ly-8, width-margin+5, ly+18], fill="#f5f5f5", outline="#999")
+    # Modern legend bar
+    legend_y = height - 38
+    draw.rounded_rectangle([margin - 10, legend_y - 12, width - margin + 10, legend_y + 20], 
+                           radius=8, fill="#252836", outline=COLORS["primary"], width=1)
+    
     legend_items = [
-        ("●", "#ff4757", "You"),
-        ("▲", "#ff4757", "Direction"),
-        ("□", "#8b6914", "Shops"),
-        ("◎", "#00acc1", "Escalator"),
-        ("◇", "#c2185b", "Elevator"),
-        ("◉", "#388e3c", "WC"),
-        ("--", "#ff6b00", "Path"),
+        ("●", COLORS["marker"], "You"),
+        ("→", COLORS["marker"], "Facing"),
+        ("■", "#6c5ce7", "Shops"),
+        ("◎", COLORS["escalator"], "Escalator"),
+        ("◆", COLORS["elevator"], "Elevator"),
+        ("◉", COLORS["toilet"], "Toilet"),
+        ("···", COLORS["path_main"], "Route"),
     ]
-    lx = margin + 10
-    spacing = (width - 2*margin) // len(legend_items)
+    
+    lx = margin + 15
+    spacing = (width - 2*margin - 30) // len(legend_items)
     for symbol, color, label in legend_items:
-        draw.text((lx, ly+5), f"{symbol} {label}", fill=color, font=small_font, anchor="lm")
+        draw.text((lx, legend_y + 4), symbol, fill=color, font=small_font, anchor="lm")
+        draw.text((lx + 15, legend_y + 4), label, fill=COLORS["text_secondary"], font=small_font, anchor="lm")
         lx += spacing
     
     return img
 
-def draw_position_marker(img, location, margin=50):
-    """Draw the position marker with direction arrow."""
+def draw_position_marker(img, location, margin=60):
+    """Draw modern position marker with transparent ring effects."""
     draw = ImageDraw.Draw(img)
     w, h = img.size
     
     px = margin + (w - 2*margin) * location.x
     py = margin + (h - 2*margin) * location.y
     
-    # Position dot
-    draw.ellipse([px-10, py-10, px+10, py+10], fill="#ff4757", outline="#fff", width=2)
-    
-    # Direction arrow
-    angle = math.radians(-location.direction + 90)  # Convert to canvas coordinates
-    arrow_len = 40
+    # Direction arrow with modern style (draw first so marker is on top)
+    angle = math.radians(-location.direction + 90)
+    arrow_len = 50
     tip = (px + arrow_len * math.cos(angle), py - arrow_len * math.sin(angle))
-    base_angle = 2.6  # Arrow base spread
-    b1 = (px + 15 * math.cos(angle + base_angle), py - 15 * math.sin(angle + base_angle))
-    b2 = (px + 15 * math.cos(angle - base_angle), py - 15 * math.sin(angle - base_angle))
-    draw.polygon([tip, b1, (px, py), b2], fill="#ff4757", outline="#fff")
     
-    # Confidence ring
-    ring_radius = 14 + (1 - location.confidence) * 15
-    draw.ellipse([px-ring_radius, py-ring_radius, px+ring_radius, py+ring_radius], 
-                outline="#ff4757", width=2)
+    # Arrow shadow/glow (outline only, transparent)
+    draw.line([(px, py), tip], fill=COLORS["marker_glow"], width=8)
+    
+    # Arrow body
+    draw.line([(px, py), tip], fill=COLORS["marker"], width=4)
+    
+    # Arrow head
+    head_size = 12
+    head_angle = 0.5
+    h1 = (tip[0] - head_size * math.cos(angle - head_angle), tip[1] + head_size * math.sin(angle - head_angle))
+    h2 = (tip[0] - head_size * math.cos(angle + head_angle), tip[1] + head_size * math.sin(angle + head_angle))
+    draw.polygon([tip, h1, h2], fill=COLORS["marker"], outline="#fff", width=2)
+    
+    # Transparent pulsing rings (outlines only - don't block elements)
+    ring_colors = [
+        (COLORS["marker_glow"], 1),
+        (blend_colors(COLORS["marker"], COLORS["marker_glow"], 0.5), 2),
+        (COLORS["marker"], 2),
+    ]
+    for i, (color, width) in enumerate(ring_colors):
+        ring_radius = 20 + i * 8
+        draw.ellipse([px-ring_radius, py-ring_radius, px+ring_radius, py+ring_radius], 
+                    outline=color, width=width)
+    
+    # Main position dot (solid center)
+    draw.ellipse([px-10, py-10, px+10, py+10], fill=COLORS["marker"], outline="#fff", width=3)
+    
+    # Inner highlight
+    draw.ellipse([px-4, py-4, px+4, py+4], fill="#fff")
+    
+    # Confidence ring (outermost)
+    conf_radius = 40 + (1 - location.confidence) * 15
+    draw.ellipse([px-conf_radius, py-conf_radius, px+conf_radius, py+conf_radius], 
+                outline=COLORS["marker_glow"], width=1)
     
     return img
 
-def draw_info_boxes(img, location, toilet_nav, margin=50):
-    """Draw information boxes."""
+def draw_info_boxes(img, location, toilet_nav, margin=60):
+    """Draw modern information cards."""
     draw = ImageDraw.Draw(img)
     w, h = img.size
     
     try:
-        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 10)
-        bold_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 11)
+        font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 12)
+        bold_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 14)
+        small_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 11)
+        title_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 13)
     except:
-        font = bold_font = ImageFont.load_default()
+        font = bold_font = small_font = title_font = ImageFont.load_default()
     
-    # Location info box (top right)
-    box_x = w - margin - 8
-    box_w = 190
-    draw.rectangle([box_x - box_w, margin + 8, box_x, margin + 105], fill="#fff", outline="#888")
+    # Location info card (top right)
+    card_w = 210
+    card_h = 130
+    card_x = w - margin - 5
+    card_y = margin + 10
+    
+    # Card shadow
+    draw.rounded_rectangle([card_x - card_w + 4, card_y + 4, card_x + 4, card_y + card_h + 4], 
+                           radius=12, fill="#0a0c14")
+    
+    # Card background
+    draw.rounded_rectangle([card_x - card_w, card_y, card_x, card_y + card_h], 
+                           radius=12, fill="#252836", outline=COLORS["primary"], width=2)
+    
+    # Card header
+    draw.rounded_rectangle([card_x - card_w, card_y, card_x, card_y + 32], 
+                           radius=12, fill=COLORS["primary"])
+    draw.rectangle([card_x - card_w, card_y + 20, card_x, card_y + 32], fill=COLORS["primary"])
+    draw.text((card_x - card_w//2, card_y + 16), "📍 LOCATION", 
+             fill="#fff", font=title_font, anchor="mm")
     
     # Format shops with codes
     shop_display = []
     for i, shop in enumerate(location.detected_shops[:2]):
         code = location.store_codes[i] if i < len(location.store_codes) else ""
         if code and code != shop:
-            shop_display.append(f"{shop} ({code})")
+            shop_display.append(f"{shop[:12]}")
         else:
-            shop_display.append(shop)
+            shop_display.append(shop[:12])
+    shops_text = ", ".join(shop_display) if shop_display else "—"
     
     info_lines = [
-        f"Floor: {location.floor}",
-        f"Direction: {location.direction:.0f}°",
-        f"Confidence: {location.confidence:.0%}",
-        f"Shops: {', '.join(shop_display) or 'None'}",
+        ("Floor", location.floor, COLORS["secondary"]),
+        ("Direction", f"{location.direction:.0f}°", COLORS["text_primary"]),
+        ("Confidence", f"{location.confidence:.0%}", COLORS["success"] if location.confidence > 0.7 else COLORS["warning"]),
     ]
-    for i, line in enumerate(info_lines):
-        draw.text((box_x - box_w + 8, margin + 16 + i * 22), line, fill="#333", font=font)
     
-    # Toilet navigation box (bottom left)
-    box_y = h - 125
-    draw.rectangle([margin, box_y, margin + 295, box_y + 85], 
-                  fill="#fff3e0", outline="#ff6b00", width=2)
-    draw.text((margin + 10, box_y + 8), "🚻 Nearest Toilet", fill="#e65100", font=bold_font)
+    for i, (label, value, color) in enumerate(info_lines):
+        y_pos = card_y + 42 + i * 20
+        draw.text((card_x - card_w + 12, y_pos), f"{label}:", fill=COLORS["text_secondary"], font=small_font, anchor="lm")
+        draw.text((card_x - 12, y_pos), value, fill=color, font=small_font, anchor="rm")
+    
+    # Nearby shops on separate line with truncation
+    if shops_text != "—":
+        nearby_display = shops_text if len(shops_text) <= 22 else shops_text[:19] + "..."
+    else:
+        nearby_display = "—"
+    draw.text((card_x - card_w + 12, card_y + 102), "Nearby:", fill=COLORS["text_secondary"], font=small_font, anchor="lm")
+    draw.text((card_x - 12, card_y + 102), nearby_display, fill=COLORS["text_secondary"], font=small_font, anchor="rm")
+    
+    # Toilet navigation card (bottom left)
+    nav_w = 280
+    nav_h = 100
+    nav_x = margin
+    nav_y = h - margin - nav_h - 45
+    
+    # Card shadow
+    draw.rounded_rectangle([nav_x + 4, nav_y + 4, nav_x + nav_w + 4, nav_y + nav_h + 4], 
+                           radius=12, fill="#0a0c14")
+    
+    # Card background
+    draw.rounded_rectangle([nav_x, nav_y, nav_x + nav_w, nav_y + nav_h], 
+                           radius=12, fill="#252836", outline=COLORS["toilet_target"], width=2)
+    
+    # Card header
+    draw.rounded_rectangle([nav_x, nav_y, nav_x + nav_w, nav_y + 32], 
+                           radius=12, fill=COLORS["toilet_target"])
+    draw.rectangle([nav_x, nav_y + 20, nav_x + nav_w, nav_y + 32], fill=COLORS["toilet_target"])
+    draw.text((nav_x + nav_w//2, nav_y + 16), "🚻 NEAREST TOILET", 
+             fill="#1a1d29", font=title_font, anchor="mm")
     
     toilet = toilet_nav.get("toilet", {})
-    toilet_lines = [
-        f"📍 {toilet.get('name', 'Unknown')}",
-        f"📏 Walking: ~{toilet_nav.get('distance_m', 0):.0f}m",
-        toilet_nav.get("instructions", ""),
-    ]
-    for i, line in enumerate(toilet_lines):
-        draw.text((margin + 10, box_y + 30 + i * 16), line, fill="#333", font=font)
+    distance = toilet_nav.get('distance_m', 0)
     
+    # Distance with visual indicator
+    draw.text((nav_x + 15, nav_y + 48), toilet.get('name', 'Unknown'), 
+             fill=COLORS["text_primary"], font=bold_font, anchor="lm")
+    
+    # Distance pill
+    dist_text = f"~{distance:.0f}m"
+    draw.rounded_rectangle([nav_x + nav_w - 70, nav_y + 42, nav_x + nav_w - 12, nav_y + 58], 
+                           radius=8, fill=COLORS["secondary"])
+    draw.text((nav_x + nav_w - 41, nav_y + 50), dist_text, fill="#1a1d29", font=small_font, anchor="mm")
+    
+    # Instructions
+    instructions = toilet_nav.get("instructions", "")
+    if len(instructions) > 35:
+        instructions = instructions[:35] + "..."
+    draw.text((nav_x + 15, nav_y + 72), instructions, 
+             fill=COLORS["text_secondary"], font=small_font, anchor="lm")
+    
+    # Accessible indicator
     if toilet.get("accessible"):
-        draw.text((margin + 270, box_y + 8), "♿", fill="#1976d2", font=bold_font)
+        draw.text((nav_x + 15, nav_y + 88), "♿ Accessible", fill=COLORS["secondary"], font=small_font, anchor="lm")
     
     return img
 
