@@ -1,0 +1,7 @@
+# Times Square Photo Location Estimator
+# Install with: pip install -r requirements.txt
+
+Pillow>=10.0.0
+requests>=2.31.0
+openai>=1.0.0
+

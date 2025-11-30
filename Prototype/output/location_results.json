@@ -1,0 +1,92 @@
+[
+  {
+    "photo": "Screenshot 2025-11-30 at 15.41.24.png",
+    "floor": "GF",
+    "position": {
+      "x": 0.38,
+      "y": 0.48
+    },
+    "direction": 315,
+    "confidence": 0.95,
+    "detected_shops": [
+      "Lane Crawford",
+      "Celine",
+      "Chanel",
+      "Bottega Veneta"
+    ],
+    "store_codes": [
+      "Lane Crawford",
+      "GF",
+      "GF",
+      "GF"
+    ],
+    "nearest_toilet": {
+      "name": "NW Toilets",
+      "distance_m": 53.7
+    }
+  },
+  {
+    "photo": "Screenshot 2025-11-30 at 15.41.46.png",
+    "floor": "8F",
+    "position": {
+      "x": 0.47,
+      "y": 0.45
+    },
+    "direction": 0,
+    "confidence": 0.95,
+    "detected_shops": [
+      "Fortress"
+    ],
+    "store_codes": [
+      "807-808"
+    ],
+    "nearest_toilet": {
+      "name": "East Toilets",
+      "distance_m": 46.1
+    }
+  },
+  {
+    "photo": "Screenshot 2025-11-30 at 15.42.05.png",
+    "floor": "GF",
+    "position": {
+      "x": 0.35,
+      "y": 0.62
+    },
+    "direction": 0,
+    "confidence": 0.85,
+    "detected_shops": [
+      "Lane Crawford",
+      "Luxury brands"
+    ],
+    "store_codes": [
+      "Lane Crawford",
+      "GF-1F"
+    ],
+    "nearest_toilet": {
+      "name": "NW Toilets",
+      "distance_m": 81.6
+    }
+  },
+  {
+    "photo": "Screenshot 2025-11-30 at 15.43.02.png",
+    "floor": "B2",
+    "position": {
+      "x": 0.22,
+      "y": 0.52
+    },
+    "direction": 55,
+    "confidence": 0.95,
+    "detected_shops": [
+      "The Body Shop",
+      "Shake Shack"
+    ],
+    "store_codes": [
+      "b217-218",
+      "b243"
+    ],
+    "nearest_toilet": {
+      "name": "West Toilets",
+      "distance_m": 34.3
+    }
+  }
+]
